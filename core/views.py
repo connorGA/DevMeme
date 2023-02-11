@@ -41,6 +41,7 @@ def signup(request):
     else:
         return render(request, 'signup.html')
 
+
 def signin(request):
 
     if request.method == 'POST':
@@ -55,6 +56,11 @@ def signin(request):
         else:
             messages.info(request, 'Credentials Invalid')
             return redirect('signin')
-            
+
     else:
         return render(request, 'signin.html')
+
+
+def logout(request):
+    auth.logout(request)
+    return redirect('signin')
