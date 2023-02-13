@@ -30,6 +30,12 @@ def upload(request):
     else:
         return redirect('/')
 
+
+@login_required(login_url='signin')
+def like_post(request):
+    return redirect('/')
+
+
 @login_required(login_url='signin')
 def settings(request):
     user_profile = Profile.objects.get(user=request.user)
