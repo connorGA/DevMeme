@@ -18,6 +18,7 @@ def index(request):
 
     user_following = FollowersCount.objects.filter(follower=request.user.username)
 
+    # get the posts of the users that the logged in user is following
     for users in user_following:
         user_following_list.append(users.user)
     
@@ -25,6 +26,11 @@ def index(request):
         feed_lists = Post.objects.filter(user=usernames)
         feed.append(feed_lists)
 
+    # get the posts of the current user
+    user_posts = Post.objects.filter(user=request.user.username)
+    feed.append(user_posts)
+
+    # flatten the feed list
     feed_list = list(chain(*feed))
 
     posts = Post.objects.all()
