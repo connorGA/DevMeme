@@ -55,6 +55,11 @@
                                 <input type="file" name="image" value="" class="shadow-none bg-gray-100">
                             </div>
                             <div class="col-span-2">
+                                <label for=""> Background Image</label>
+                                <img width="100" height="100" src="{{user_profile.backgroundimg.url}}" />
+                                <input type="file" name="backgroundimage" value="" class="shadow-none bg-gray-100">
+                            </div>
+                            <div class="col-span-2">
                                 <label for="about">Bio</label>  
                                 <textarea id="about" name="bio" rows="3"  class="shadow-none bg-gray-100">{{user_profile.bio}}</textarea>
                             </div> 
