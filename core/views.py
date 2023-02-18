@@ -123,6 +123,19 @@ def like_post(request):
 
 
 @login_required(login_url='signin')
+def delete_post(request):
+    if request.method == 'POST':
+        post_id = request.POST.get('post_id')
+        post = Post.objects.filter(id=post_id, user=request.user.username).first()
+        if post:
+            post.delete()
+            messages.success(request, 'Post deleted successfully')
+        else:
+            messages.error(request, 'You are not authorized to delete this post')
+    return redirect('/')
+
+
+@login_required(login_url='signin')
 def profile(request, pk):
     user_object = User.objects.get(username=pk)
     user_profile = Profile.objects.get(user=user_object)
@@ -195,7 +208,6 @@ def settings(request):
         return redirect('settings')
 
     return render(request, 'setting.html', {'user_profile': user_profile})
-
 
 
 def signup(request):
