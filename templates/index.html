@@ -19,10 +19,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 </head>
 
-<body>
+<body style="background-image: url('/static/images/backgroundgif.gif') !important;">
 
             <header>
                 <div class="header_inner">
+                    <a href="" style="margin-right: 10px;">
+                        <b><h1 style="font-size: 1.5rem;">DevMeme</h1></b>
+                     </a>
                     <form action="/search" method="POST">
                     {% csrf_token %}
                     <div class="left-side">
@@ -45,6 +48,9 @@
                     </div>
                     </form>
                     <div class="right-side lg:pr-4">
+                        <a href="#" class="">
+                            Welcome <b name="" class="">{{user.username}}&nbsp; &nbsp; &nbsp;</b>
+                        </a>
                          <!-- upload -->
                         <a href="#"
                             class="bg-pink-500 flex font-bold hidden hover:bg-pink-600 hover:text-white inline-block items-center lg:block max-h-10 mr-4 px-4 py-2 rounded shado text-white">
@@ -368,7 +374,9 @@
                                         </a>
                                         <div class="flex flex-col">
                                             <span class="block capitalize font-semibold"> {{suggestion.user}} </span>
-                                            <span class="block capitalize text-sm"> {{suggestion.bio}} </span>
+                                            
+                                            <span class="block capitalize text-sm">{{suggestion.bio|slice:":30"}}...</span>
+                                            
                                         </div>
                                     </div>
                                     
