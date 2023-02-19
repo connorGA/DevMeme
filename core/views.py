@@ -129,7 +129,7 @@ def delete_post(request):
         post = Post.objects.filter(id=post_id, user=request.user.username).first()
         if post:
             post.delete()
-            messages.success(request, 'Post deleted successfully')
+            # messages.success(request, 'Post deleted successfully')
         else:
             messages.error(request, 'You are not authorized to delete this post')
     return redirect('/')
