@@ -1,0 +1,1 @@
+web: gunicorn devmeme.wsgi --log-file -
