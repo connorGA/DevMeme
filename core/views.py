@@ -1,18 +1,114 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User, auth
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.contrib.auth.decorators import login_required
 from .models import Profile, Post, LikePost, FollowersCount
 from itertools import chain
 import random
+import boto3
+from botocore.exceptions import ClientError
+from django.conf import settings
+from django.utils import timezone
+from django.contrib.auth import get_user_model
 
+
+User = get_user_model()
+
+s3 = boto3.client('s3',
+    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    region_name=settings.AWS_S3_REGION_NAME
+)
+s3_resource = boto3.resource('s3',
+    aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+    aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+    region_name=settings.AWS_S3_REGION_NAME
+)
+bucket_name = settings.AWS_STORAGE_BUCKET_NAME
+
+@login_required
+def create_post(request):
+    if request.method == 'POST':
+        caption = request.POST['caption']
+        image = request.FILES['image']
+
+        # Upload the image to S3
+        filename = f"post_images/{timezone.now().strftime('%Y%m%d%H%M%S%f')}.jpg"
+        try:
+            s3.upload_fileobj(image, bucket_name, filename, ExtraArgs={'ACL': 'public-read'})
+            image_url = f"https://{bucket_name}.s3.amazonaws.com/{filename}"
+        except ClientError as e:
+            print(f"Error uploading image to S3: {e}")
+            return JsonResponse({'success': False})
+
+        # Create a new post object and save it to the database
+        post = Post(user=request.user.username, image_url=image_url, caption=caption)
+        post.save()
+
+        return redirect('home')
+
+    return render(request, 'create_post.html')
+
+def home(request):
+    # Get all posts from the database and add their S3 URLs to the context
+    posts = Post.objects.all()
+    for post in posts:
+        post.image_url = s3.generate_presigned_url('get_object', Params={'Bucket': bucket_name, 'Key': post.image.name}, ExpiresIn=3600)
+
+    context = {
+        'posts': posts,
+    }
+    return render(request, 'home.html', context)
+
+@login_required
+def edit_profile(request):
+    user_id = request.user.id
+    profile = get_object_or_404(Profile, id_user=user_id)
+
+    if request.method == 'POST':
+        bio = request.POST['bio']
+        location = request.POST['location']
+        profileimg = request.FILES.get('profileimg')
+        backgroundimg = request.FILES.get('backgroundimg')
+
+        # Upload profile image to S3
+        if profileimg:
+            filename = f"profile_images/{timezone.now().strftime('%Y%m%d%H%M%S%f')}.jpg"
+            try:
+                s3.upload_fileobj(profileimg, bucket_name, filename, ExtraArgs={'ACL': 'public-read'})
+                profile.profileimg_url = f"https://{bucket_name}.s3.amazonaws.com/{filename}"
+            except ClientError as e:
+                print(f"Error uploading profile image to S3: {e}")
+                return JsonResponse({'success': False})
+
+        # Upload background image to S3
+        if backgroundimg:
+            filename = f"background_images/{timezone.now().strftime('%Y%m%d%H%M%S%f')}.jpg"
+            try:
+                s3.upload_fileobj(backgroundimg, bucket_name, filename, ExtraArgs={'ACL': 'public-read'})
+                profile.backgroundimg_url = f"https://{bucket_name}.s3.amazonaws.com/{filename}"
+            except ClientError as e:
+                print(f"Error uploading background image to S3: {e}")
+                return JsonResponse({'success': False})
+
+        # Save profile object
+        profile.bio = bio
+        profile.location = location
+        profile.save()
+
+        return JsonResponse({'success': True})
+
+    return render(request, 'edit_profile.html', {'profile': profile})
 # Create your views here.
 
 @login_required(login_url='signin')
 def index(request):
-    user_object = User.objects.get(username=request.user.username)
-    user_profile = Profile.objects.get(user=user_object)
+    try:
+        user_object = User.objects.get(username=request.user.username)
+        user_profile = Profile.objects.get(user=user_object)
+    except Profile.DoesNotExist:
+        return redirect('signin')
 
     user_following_list = []
     feed = []

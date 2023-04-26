@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'core'
+    'core',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -89,6 +90,14 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+# AWS S3 Configuration
+AWS_ACCESS_KEY_ID = 'AKIAQEF44UUCU6XJL6OI'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'devmemebucket'
+AWS_S3_REGION_NAME = 'us-west-1'
+AWS_DEFAULT_ACL = 'public-read'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 
 # Password validation
